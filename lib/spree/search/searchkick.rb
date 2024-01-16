@@ -44,12 +44,11 @@ module Spree
                            order: sorted,
                          })
           # if @enable_aggregations
-            options.merge!({
-                             aggs: aggregations,
-                             smart_aggs: true,
-                           })
+          #   options.merge!({
+          #                    aggs: aggregations,
+          #                    smart_aggs: true,
+          #                  })
           # end
-
           ::Spree::Product.search(keyword_query, **options)
         else
           options.merge!({ body: @properties[:body] })

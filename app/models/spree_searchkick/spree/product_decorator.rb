@@ -39,7 +39,7 @@ module SpreeSearchkick
         end
 
         def base.search_fields
-          [:name, :isins, :brand, :main_brand, :barcode]
+          [:name, :isins, :brand, :main_brand, :barcode, :description]
         end
 
         def base.filter_fields
@@ -267,6 +267,7 @@ module SpreeSearchkick
         json = {
           id: presenter[:id],
           name: presenter[:name],
+          description: description,
           slug: presenter[:slug],
           created_at: presenter[:created_at],
           updated_at: presenter[:updated_at],
