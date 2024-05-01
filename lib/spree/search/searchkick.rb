@@ -89,9 +89,9 @@ module Spree
 
       def sorted
         order_params = {}
-        unless @properties[:conversions]
-          order_params = { :featured => :desc }
-        end
+        # unless @properties[:conversions]
+        #   order_params = { :featured => :desc }
+        # end
 
         order_params[:conversions] = :desc if @properties[:sort_by] == 'conversions' || @properties[:conversions]
         order_params[:price] = :desc if @properties[:sort_by] == 'price-high-to-low'
