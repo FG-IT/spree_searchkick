@@ -39,7 +39,7 @@ module SpreeSearchkick
         end
 
         def base.search_fields
-          [:name, :isins, :brand, :main_brand, :barcode, :description]
+          [:name, :isins, :brand, :main_brand, :barcode]
         end
 
         def base.filter_fields
