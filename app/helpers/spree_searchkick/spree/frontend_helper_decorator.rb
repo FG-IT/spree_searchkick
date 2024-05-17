@@ -3,7 +3,11 @@ module SpreeSearchkick
     module FrontendHelperDecorator
 
       def filtering_params
-        @filtering_params ||= available_option_types.map(&:filter_param).concat(available_properties.map(&:filter_param)).concat(static_filters)
+        if true
+          @filtering_params ||= []
+        else
+          @filtering_params ||= available_option_types.map(&:filter_param).concat(available_properties.map(&:filter_param)).concat(static_filters)
+        end
       end
 
       def available_properties_cache_key
@@ -11,10 +15,14 @@ module SpreeSearchkick
       end
 
       def available_properties
-        @available_properties ||= Rails.cache.fetch("available-properties/#{available_properties_cache_key}") do
-          Spree::Property.filterable.to_a
+        if true
+          @available_properties ||= []
+        else
+          @available_properties ||= Rails.cache.fetch("available-properties/#{available_properties_cache_key}") do
+            Spree::Property.filterable.to_a
+          end
+          @available_properties
         end
-        @available_properties
       end
     end
   end

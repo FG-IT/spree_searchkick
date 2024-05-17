@@ -3,7 +3,8 @@ module SpreeSearchkick
     module ProductDecorator
       def self.prepended(base)
         base.searchkick(
-          callbacks: :async,
+          callbacks: :queue,
+          match: :word,
           word_start: [:name],
           settings: { :number_of_replicas => 0, :"index.mapping.total_fields.limit" => 10000 },
           index_prefix: ENV['SITE_NAME'],
@@ -17,20 +18,11 @@ module SpreeSearchkick
           }
         ) unless base.respond_to?(:searchkick_index)
 
-        # base.scope :search_import, lambda {
-        #   includes(
-        #     :option_types,
-        #     :variants_including_master,
-        #     taxons: :taxonomy,
-        #     master: :default_price,
-        #     product_properties: :property,
-        #     variants: :option_values
-        #   )
-        # }
+        base.scope :search_import, lambda {
+          includes(:orders, :taxons, :variants_including_master, master: [:default_price, :images, :stock_items])
+        }
 
-        base.skip_callback :commit, :after, :reindex, raise: false
-        # base.after_save :reindex, if: -> { ::Searchkick.callbacks?(default: :async) }
-        base.after_save -> { reindex_later(300) }
+        base.after_commit :reindex, if: -> { ::Searchkick.callbacks?(default: :async) }
         base.after_destroy :reindex, if: -> { ::Searchkick.callbacks?(default: :async) }
 
         def base.autocomplete_fields
@@ -38,12 +30,13 @@ module SpreeSearchkick
         end
 
         def base.search_fields
-          [:name]
+          [:upc^100, :brand^70, :name^30, :description]
         end
 
         def base.filter_fields
-          fields = [:price, :brand, :in_stock, :conversions, :has_image, :total_on_hand, :purchasable, :taxon_ids]
-          fields.concat(::Spree::Property.filterable_properties.map {|prop| prop.filter_name })
+          fields = [:active, :price, :in_stock, :conversions, :has_image, :total_on_hand, :purchasable, :taxon_ids]
+          # Disabled property and option search temporary
+          # fields.concat(::Spree::Property.filterable_properties.map {|prop| prop.filter_name })
           # fields.concat(::Spree::OptionType.filterable_option_types.map {|ot| ot.filter_name })
 
           fields.compact.uniq
@@ -53,10 +46,9 @@ module SpreeSearchkick
           ::Spree::Product.searchkick_index.replace_indice
 
           begin
-            ::Spree::Product.includes(:representation).find_in_batches.each do |batch|
-              batch.each do |product|
-                product.reindex(nil, mode: :inline)
-              end
+            ::Spree::Product.select(:id).find_in_batches do |products|
+              product_ids = products.map {|product| product.id.to_s }
+              ::Searchkick::ProcessBatchJob.perform_later(class_name: '::Spree::Product', record_ids: product_ids, index_name: nil)
             end
           rescue ActiveRecord::ActiveRecordError => e
             ActiveRecord::Base.connection.reconnect!
@@ -107,101 +99,39 @@ module SpreeSearchkick
       end
 
       def search_data
-        if defined?(::Spree::Representation)
-          json = search_data_representable
-        else
-          all_variants = variants_including_master.pluck(:id, :sku)
+        all_variants = variants_including_master.pluck(:id, :sku)
 
-          all_taxons = taxons.flat_map { |t| t.self_and_ancestors.pluck(:id, :name) }.uniq
+        all_taxons = taxons.flat_map { |t| t.self_and_ancestors.pluck(:id, :name) }.uniq
 
-          quantity = total_on_hand
-          if quantity == Float::INFINITY
-            quantity = 100
-          end
-
-          json = {
-            id: id,
-            name: name,
-            slug: slug,
-            description: description[0..6000],
-            active: available?,
-            in_stock: in_stock?,
-            created_at: created_at,
-            updated_at: updated_at,
-            price: price,
-            currency: currency,
-            conversions: orders.complete.count,
-            taxon_ids: all_taxons.map(&:first),
-            taxon_names: all_taxons.map(&:last),
-            skus: all_variants.map(&:last),
-            total_on_hand: quantity,
-            has_image: images.count > 0,
-            purchasable: purchasable?
-          }
-
-          json.merge!(option_types_for_es_index(all_variants))
-          json.merge!(properties_for_es_index)
-        end
-
-        json.merge!(index_data)
-
-        json
-      end
-
-      def search_data_representable
-        begin
-          resp = ::Spree::Product.presenter_by_slug(slug)
-        rescue
-          resp = presenter
-        end
-        taxons = {}
-        resp[:taxons].each do |t_path|
-          t_path.each do |taxon|
-            unless taxons.has_key?(taxon[:id])
-              taxons[taxon[:id]] = taxon
-            end
-          end
-        end
-        properties = resp[:properties]&.select {|prop| !prop[:value].blank? }
-        if properties.nil?
-          properties = []
-        end
-
-        quantity = resp[:total_on_hand]
+        quantity = total_on_hand
         if quantity == Float::INFINITY
           quantity = 100
         end
 
         json = {
-          id: resp[:id],
-          name: resp[:name],
-          slug: resp[:slug],
-          description: resp[:description][0..6000],
-          active: resp[:available],
-          in_stock: resp[:in_stock],
-          created_at: resp[:created_at],
-          updated_at: resp[:updated_at],
-          price: resp[:price].blank? ? 0 : resp[:price].to_f.round(2),
-          currency: resp[:currency],
-          conversions: resp[:conversions],
-          taxon_ids: taxons.values.map {|t| t[:id] },
-          taxon_names: taxons.values.map {|t| t[:name] },
-          skus: resp[:variants].map {|v| v[:sku] },
+          id: id,
+          name: name,
+          slug: slug,
+          description: description[0..6000],
+          active: available?,
+          in_stock: in_stock?,
+          created_at: created_at,
+          updated_at: updated_at,
+          price: price,
+          currency: currency,
+          conversions: orders.complete.count,
+          taxon_ids: all_taxons.map(&:first),
+          taxon_names: all_taxons.map(&:last),
+          skus: all_variants.map(&:last),
           total_on_hand: quantity,
-          has_image: resp[:images].blank? ? false : true,
-          purchasable: resp[:purchasable],
-          property_ids: properties.map {|prop| prop[:id] },
-          property_names: properties.map {|prop| prop[:name] },
-          properties: properties.map {|prop| { id: prop[:id], name: prop[:name], value: prop[:value] } }
+          has_image: images.count > 0,
+          purchasable: purchasable?
         }
 
-        properties.each do |prop|
-          json.merge!(Hash[prop[:name].downcase, prop[:value].downcase].symbolize_keys)
-        end
+        # json.merge!(option_types_for_es_index(all_variants))
+        # json.merge!(properties_for_es_index)
 
-        if !json.has_key?(:brand) && resp[:brand].present?
-          json[:brand] = resp[:brand].downcase
-        end
+        json.merge!(index_data)
 
         json
       end

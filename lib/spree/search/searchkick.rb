@@ -14,27 +14,14 @@ module Spree
       def base_elasticsearch(**args)
         curr_page = page || 1
         dft_includes = [
-            # :tax_category,
-            variants: [
-                {images: {attachment_attachment: :blob}}
-            ],
-            master: [
-                :prices,
-                {images: {attachment_attachment: :blob}}
-            ]
+          master: [:default_price, :stock_items, images: {attachment_attachment: :blob}]
         ]
         includes = args.delete(:includes)
-        if includes.nil?
-          if defined?(::Spree::Representation)
-            # includes = [:representation]
-            includes = []
-          end
-        end
 
         options = {
           page: curr_page,
           per_page: per_page,
-          includes: includes.nil? ? dft_includes : includes
+          includes: includes.nil? ? dft_includes : includes,
         }
         if @properties[:body].blank?
           options.merge!({
@@ -84,13 +71,13 @@ module Spree
 
       def sorted
         sort_conds = [{_score: :desc}]
+        return sort_conds if @properties[:sort_by] == 'relevance'
 
         order_params = {}
         order_params[:conversions] = :desc if @properties[:sort_by] == 'conversions' || @properties[:sort_by] == 'default'
         order_params[:price] = :desc if @properties[:sort_by] == 'price-high-to-low'
         order_params[:price] = :asc if @properties[:sort_by] == 'price-low-to-high'
         order_params[:created_at] = :desc if @properties[:sort_by] == 'newest-first'
-        # order_params[:_score] = :desc if @properties[:sort_by] == 'relevance'
 
         sort_conds << order_params
       end
@@ -126,7 +113,7 @@ module Spree
         options = params.dup
 
         @properties[:body] = options.delete(:body)
-        @properties[:keywords] = options.delete(:keywords)
+        @properties[:keywords] = options.delete(:keywords) || options.delete(:brand)
 
         @properties[:search] = options.delete(:search)
         @properties[:taxon] = params[:taxon].blank? ? nil : params.delete(:taxon)
