@@ -31,7 +31,7 @@ module SpreeSearchkick
         end
 
         def base.search_fields
-          [:upc^100, :brand^70, :name^30, :description]
+          ["upc^100", "brand^70", "name^30", "description"]
         end
 
         def base.filter_fields
