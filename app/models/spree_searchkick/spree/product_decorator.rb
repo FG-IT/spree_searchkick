@@ -22,7 +22,8 @@ module SpreeSearchkick
           includes(:orders, :taxons, :variants_including_master, master: [:default_price, :images, :stock_items])
         }
 
-        base.after_commit :reindex, if: -> { ::Searchkick.callbacks?(default: :async) }
+        base.skip_callback :commit, :after, :reindex, raise: false
+        base.after_save -> { reindex_later(300) }
         base.after_destroy :reindex, if: -> { ::Searchkick.callbacks?(default: :async) }
 
         def base.autocomplete_fields
