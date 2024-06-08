@@ -20,7 +20,6 @@ module Spree
 
       def self.process_filter(name, type, filter)
         options = []
-        Rails.logger.info filter
         case type
         when :price
           min = filter['buckets'].min_by { |a| a['key'] }

@@ -44,10 +44,10 @@ module Spree
                            order: sorted,
                          })
           # if @enable_aggregations
-          #   options.merge!({
-          #                    aggs: aggregations,
-          #                    smart_aggs: true,
-          #                  })
+            options.merge!({
+                             aggs: aggregations,
+                             smart_aggs: true,
+                           })
           # end
           ::Spree::Product.search(keyword_query, **options)
         else
@@ -115,8 +115,7 @@ module Spree
       def aggregation_classes
         [
           Spree::Taxonomy,
-          Spree::Property,
-          Spree::OptionType
+          Spree::Property
         ]
       end
 
