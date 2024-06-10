@@ -6,7 +6,7 @@ module SpreeSearchkick
       end
       
       def filter_name
-        "#{name.downcase}_ids"
+        "taxon_ids"
       end
     end
   end
