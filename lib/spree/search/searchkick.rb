@@ -44,10 +44,10 @@ module Spree
                            order: sorted,
                          })
           # if @enable_aggregations
-            options.merge!({
-                             aggs: aggregations,
-                             smart_aggs: true,
-                           })
+          options.merge!({
+                           aggs: aggregations,
+                           smart_aggs: true,
+                         })
           # end
           ::Spree::Product.search(keyword_query, **options)
         else
@@ -102,11 +102,12 @@ module Spree
       end
 
       def aggregations
-        fs = []
-
+        fs = {}
+        price_ranges = [{ to: 25 }, { from: 25, to: 50 }, { from: 50, to: 100 }, { from: 100, to: 150 }, { from: 150, to: 200 }, { from: 200, to: 300 }, { from: 300 }]
+        fs[:price] = { ranges: price_ranges }
         aggregation_classes.each do |agg_class|
           agg_class.filterable.each do |record|
-            fs << record.filter_name.to_sym
+            fs[record.filter_name.to_sym] = {  }
           end
         end
         fs
@@ -115,7 +116,8 @@ module Spree
       def aggregation_classes
         [
           Spree::Taxonomy,
-          Spree::Property
+          Spree::Property,
+        # Spree::Price,
         ]
       end
 

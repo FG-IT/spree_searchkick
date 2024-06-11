@@ -15,6 +15,7 @@ module Spree
           es_filters << process_filter(option_type.filter_name, :option_type, aggregations[option_type.filter_name])
         end
 
+        es_filters << process_filter('price', :price, aggregations[:price])
         es_filters.uniq
       end
 

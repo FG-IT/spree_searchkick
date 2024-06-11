@@ -14,6 +14,16 @@ module SpreeSearchkick
 
         # variant.sync_inventory
       end
+
+      # def self.prepended(base)
+      #   base.filterable = true
+      # end
+      def self.prepended(base)
+        def base.filter_name
+          "price"
+        end
+      end
+
     end
   end
 end
