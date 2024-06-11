@@ -74,6 +74,10 @@ module Spree
           where_query[:vendor_ids] = vendor_id
         end
 
+        if conversions
+          where_query[:conversions] = conversions
+        end
+
         (::Spree::Product.try(:filter_fields) || []).each do |filter_field|
           if @properties.include?(filter_field)
             where_query[filter_field] = @properties[filter_field]

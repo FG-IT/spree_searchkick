@@ -43,7 +43,7 @@ module SpreeSearchkick
         end
 
         def base.filter_fields
-          [:brand, :taxon_ids, :vendor_ids, :isins, :has_image, :property_ids, :option_type_ids, :option_value_ids, :shipping_category_ids, :countries, :price]
+          [:brand, :taxon_ids, :vendor_ids, :isins, :has_image, :property_ids, :option_type_ids, :option_value_ids, :shipping_category_ids, :countries, :price, :ship_from_countries]
             .union ::Spree::Property.filterable.map { |p| p.filter_name }
         end
 
