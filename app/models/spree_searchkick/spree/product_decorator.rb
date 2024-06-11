@@ -44,7 +44,7 @@ module SpreeSearchkick
 
         def base.filter_fields
           [:brand, :taxon_ids, :vendor_ids, :isins, :has_image, :property_ids, :option_type_ids, :option_value_ids, :shipping_category_ids, :countries, :price]
-            .union  ::Spree::Property.filterable.map { |p|p.filter_name  }
+            .union ::Spree::Property.filterable.map { |p| p.filter_name }
         end
 
         def base.replace_indice
@@ -233,36 +233,31 @@ module SpreeSearchkick
         shipping_category_ids = []
         price = 0
         compare_at_price = 0
-        if false
-          # inventories = ::SpreeSearchkick::Spree::Inventory.where(product_id: self.id).where(purchasable: true).where("price > 0")
-          inventories.where(purchasable: true).where('price > 0').each do |inv|
-            shipping_category_ids << inv.shipping_category_id
-            if price == 0 || inv.price < price
-              price = inv.price
+
+        sellable_variants = []
+        presenter[:variants].each { |v| sellable_variants << v if v[:available] && v[:in_stock] }
+        sellable_variants.each { |v| shipping_category_ids << v[:shipping_category][:id] if v[:shipping_category].present? }
+        shipping_category_ids.uniq!
+
+        ship_from_countries = []
+        sellable_variants.each do |v|
+          v[:stock_items].each do |s|
+            if s[:count_on_hand] > 0
+              ship_from_countries << s[:stock_location_country]
             end
           end
-          shipping_category_ids.uniq!
-        else
-          sellable_variants = []
-          presenter[:variants].each { |v| sellable_variants << v if v[:available] && v[:in_stock] }
+        end
 
-          sellable_variants.each { |v| shipping_category_ids << v[:shipping_category][:id] if v[:shipping_category].present? }
-          shipping_category_ids.uniq!
-
-          sellable_variants.each do |v|
-            v[:prices].each do |p|
-              if p[:amount] < price || price == 0
-                price = p[:amount]
-                if p[:compare_at_amount].present? && p[:compare_at_amount] > 0
-                  compare_at_price = p[:compare_at_amount]
-                end
+        sellable_variants.each do |v|
+          v[:prices].each do |p|
+            if p[:amount] < price || price == 0
+              price = p[:amount]
+              if p[:compare_at_amount].present? && p[:compare_at_amount] > 0
+                compare_at_price = p[:compare_at_amount]
               end
             end
           end
-
-          # sellable_variants.each { |v| price = v[:price].to_f compare_at_price = v[:compare_at_price].to_f if v[:price].to_f < price || price == 0 }
         end
-
         countries = presenter[:variants]&.map { |v| v[:ship_to_country_codes] }.flatten.uniq
 
         json = {
@@ -281,6 +276,7 @@ module SpreeSearchkick
           option_type_ids: option_type_ids,
           option_value_ids: option_value_ids,
           shipping_category_ids: shipping_category_ids,
+          ship_from_countries: ship_from_countries,
           countries: countries,
           price: price,
           compare_at_price: compare_at_price,

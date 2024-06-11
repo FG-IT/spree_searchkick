@@ -107,9 +107,10 @@ module Spree
         fs[:price] = { ranges: price_ranges }
         aggregation_classes.each do |agg_class|
           agg_class.filterable.each do |record|
-            fs[record.filter_name.to_sym] = {  }
+            fs[record.filter_name.to_sym] = {}
           end
         end
+        fs[:ship_from_countries] = {}
         fs
       end
 
