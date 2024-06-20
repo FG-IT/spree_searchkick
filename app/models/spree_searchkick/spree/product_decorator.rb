@@ -198,6 +198,16 @@ module SpreeSearchkick
         json
       end
 
+      def presenter_price_in_currency(variant, currency = 'USD')
+        price = variant[:prices].detect { |price| price[:currency] == currency&.upcase }
+        if price.nil?
+          money = ::Spree::Money.new(variant[:prices][0][:amount] || 0, currency: variant[:prices][0][:currency]).money.exchange_to(currency)
+          compare_at = ::Spree::Money.new(variant[:prices][0][:compare_at_amount] || 0, currency: variant[:prices][0][:currency]).money.exchange_to(currency)
+          price = { :currency => currency, :amount => money.to_f, :compare_at_amount => compare_at.to_f }
+        end
+        price
+      end
+
       def search_data_representable
         taxons = {}
         presenter[:taxons]&.each do |t_path|
@@ -231,7 +241,7 @@ module SpreeSearchkick
         option_value_ids.uniq!
 
         shipping_category_ids = []
-        price = 0
+        price = presenter_price_in_currency()
         compare_at_price = 0
 
         sellable_variants = []
@@ -249,13 +259,10 @@ module SpreeSearchkick
         end
 
         sellable_variants.each do |v|
-          v[:prices].each do |p|
-            if p[:amount] < price || price == 0
-              price = p[:amount]
-              if p[:compare_at_amount].present? && p[:compare_at_amount] > 0
-                compare_at_price = p[:compare_at_amount]
-              end
-            end
+          variant_price = presenter_price_in_currency(v)
+          if variant_price[:amount] < price || price == 0
+            price = variant_price[:amount]
+            compare_at_price = variant_price[:compare_at_amount]
           end
         end
         countries = presenter[:variants]&.map { |v| v[:ship_to_country_codes] }.flatten.uniq
