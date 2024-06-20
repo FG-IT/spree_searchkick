@@ -241,7 +241,7 @@ module SpreeSearchkick
         option_value_ids.uniq!
 
         shipping_category_ids = []
-        price = presenter_price_in_currency()
+        price = 0
         compare_at_price = 0
 
         sellable_variants = []
