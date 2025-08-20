@@ -291,7 +291,8 @@ module SpreeSearchkick
           vendor_ids: vendor_ids,
           skus: skus,
           barcode: barcode,
-          active: available? && presenter[:available],
+          active: available? && presenter[:available] && presenter[:in_stock],
+          in_stock: presenter[:in_stock],
           conversions: orders.complete.count,
           main_brand: main_brand,
           featured: featured
