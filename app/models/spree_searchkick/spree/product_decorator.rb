@@ -10,6 +10,13 @@ module SpreeSearchkick
           settings: { number_of_replicas: 0 },
           index_prefix: ENV['SITE_NAME'],
           merge_mappings: true,
+          filterable: [
+            :countries,               # keyword (array/string)
+            :brand,                   # keyword
+            :has_image,               # boolean
+            :taxon_ids,               # integer or keyword; either is fine for aggs
+            :ship_from_countries      # keyword (array/string)
+          ],
           mappings: {
             properties: {
               properties: {
