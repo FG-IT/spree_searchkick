@@ -114,7 +114,9 @@ module Spree
             fs[record.filter_name.to_sym] = {}
           end
         end
-        fs[:ship_from_countries] = {}
+        fs[:ship_from_countries] = {
+          "terms": { "field": "ship_from_countries.keyword", "size": 1000 }
+        }
         fs
       end
 
