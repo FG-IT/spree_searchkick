@@ -12,9 +12,7 @@ module SpreeSearchkick
           merge_mappings: true,
           filterable: [
             :countries, # keyword (array/string)
-            :brand,
-            :main_brand, # keyword
-            :name,
+            :brand, # keyword
             :has_image, # boolean
             :taxon_ids, # integer or keyword; either is fine for aggs
             :ship_from_countries, # keyword (array/string)
