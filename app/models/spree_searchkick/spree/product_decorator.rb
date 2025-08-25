@@ -6,7 +6,7 @@ module SpreeSearchkick
 
         base.searchkick(
           callbacks: :async,
-          # word_start: [:name],
+          word: [:name],
           settings: { number_of_replicas: 1, number_of_shards: ENV.fetch('ELASTICSEARCH_SHARDS', 4) },
           index_prefix: ENV['SITE_NAME'],
           merge_mappings: true,
