@@ -12,6 +12,7 @@ module SpreeSearchkick
           merge_mappings: true,
           filterable: [
             :countries, # keyword (array/string)
+            :main_brand,
             :brand, # keyword
             :taxon_ids, # integer or keyword; either is fine for aggs
             :ship_from_countries, # keyword (array/string)
@@ -21,9 +22,9 @@ module SpreeSearchkick
           mappings: {
             properties: {
               # name: { type: "keyword" },
-              # properties: {
-              #   type: 'nested'
-              # }
+              properties: {
+                type: 'nested'
+              }
             }
           }
         ) unless base.respond_to?(:searchkick_index)
