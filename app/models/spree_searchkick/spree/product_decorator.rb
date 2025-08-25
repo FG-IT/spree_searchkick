@@ -6,14 +6,13 @@ module SpreeSearchkick
 
         base.searchkick(
           callbacks: :async,
-          word_start: [:name],
-          settings: { number_of_replicas: 0 },
+          # word_start: [:name],
+          settings: { number_of_replicas: 1, number_of_shards: ENV.fetch('ELASTICSEARCH_SHARDS', 4) },
           index_prefix: ENV['SITE_NAME'],
           merge_mappings: true,
           filterable: [
             :countries, # keyword (array/string)
             :brand, # keyword
-            :has_image, # boolean
             :taxon_ids, # integer or keyword; either is fine for aggs
             :ship_from_countries, # keyword (array/string)
             :isins,
@@ -21,9 +20,10 @@ module SpreeSearchkick
           ],
           mappings: {
             properties: {
-              properties: {
-                type: 'nested'
-              }
+              # name: { type: "keyword" },
+              # properties: {
+              #   type: 'nested'
+              # }
             }
           }
         ) unless base.respond_to?(:searchkick_index)
@@ -48,11 +48,11 @@ module SpreeSearchkick
         end
 
         def base.search_fields
-          [:name, :isins, :brand, :main_brand, :barcode]
+          [:name, :isins, :brand, :barcode]
         end
 
         def base.filter_fields
-          [:brand, :taxon_ids, :vendor_ids, :isins, :has_image, :property_ids, :option_type_ids, :option_value_ids, :shipping_category_ids, :countries, :price, :ship_from_countries]
+          [:brand, :taxon_ids, :vendor_ids, :isins, :property_ids, :option_type_ids, :option_value_ids, :shipping_category_ids, :countries, :price, :ship_from_countries]
             .union ::Spree::Property.filterable.map { |p| p.filter_name }
         end
 
