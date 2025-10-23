@@ -58,7 +58,7 @@ module Spree
 
       def where_query(**args)
         where_query = {
-          # active: true,
+          active: true,
           price: { gt: 0 }
         }
 

@@ -17,11 +17,15 @@ module SpreeSearchkick
             :taxon_ids, # integer or keyword; either is fine for aggs
             :ship_from_countries, # keyword (array/string)
             :isins,
-            :barcode
+            :barcode,
+            :conversions
           ],
           mappings: {
             properties: {
-              # name: { type: "keyword" },
+              ship_from_countries: { type: "keyword" },
+              countries: { type: "keyword" },
+              brand: { type: "keyword" },
+              conversions: { type: "integer" },
               properties: {
                 type: 'nested'
               }
