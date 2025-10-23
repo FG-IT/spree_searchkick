@@ -22,10 +22,10 @@ module SpreeSearchkick
           ],
           mappings: {
             properties: {
-              ship_from_countries: { type: "keyword" },
-              countries: { type: "keyword" },
-              brand: { type: "keyword" },
-              conversions: { type: "integer" },
+              # ship_from_countries: { type: "keyword" },
+              # countries: { type: "keyword" },
+              # brand: { type: "keyword" },
+              # conversions: { type: "integer" },
               properties: {
                 type: 'nested'
               }
