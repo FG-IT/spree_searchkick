@@ -284,7 +284,7 @@ module SpreeSearchkick
         json = {
           id: presenter[:id],
           name: presenter[:name],
-          description: description,
+          description: description.nil? ? '' : ActionView::Base.full_sanitizer.sanitize(description).gsub(/\r?\n/, " ").squeeze(" ").strip,
           slug: presenter[:slug],
           created_at: presenter[:created_at],
           updated_at: presenter[:updated_at],
