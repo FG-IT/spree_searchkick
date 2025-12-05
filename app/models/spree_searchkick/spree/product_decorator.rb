@@ -309,7 +309,8 @@ module SpreeSearchkick
           in_stock: presenter[:in_stock],
           conversions: orders.complete.count,
           main_brand: main_brand,
-          featured: featured
+          featured: featured,
+          keywords: meta_keywords.to_s.split(",").map(&:strip)
         }
 
         properties.each do |prop|
