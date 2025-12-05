@@ -18,7 +18,8 @@ module SpreeSearchkick
             :ship_from_countries, # keyword (array/string)
             :isins,
             :barcode,
-            :conversions
+            :conversions,
+            :tags
           ],
           mappings: {
             properties: {
@@ -57,7 +58,7 @@ module SpreeSearchkick
         end
 
         def base.filter_fields
-          [:brand, :taxon_ids, :vendor_ids, :isins, :property_ids, :option_type_ids, :option_value_ids, :shipping_category_ids, :countries, :price, :ship_from_countries]
+          [:brand, :tags, :taxon_ids, :vendor_ids, :isins, :property_ids, :option_type_ids, :option_value_ids, :shipping_category_ids, :countries, :price, :ship_from_countries]
             .union ::Spree::Property.filterable.map { |p| p.filter_name }
         end
 
@@ -201,7 +202,7 @@ module SpreeSearchkick
             active: available?,
             in_stock: in_stock?,
             conversions: orders.complete.count,
-            featured: featured
+            featured: is_featured?(sku)
           }
           json.merge!(option_types_for_es_index(all_variants))
           json.merge!(properties_for_es_index)
@@ -210,6 +211,10 @@ module SpreeSearchkick
         json.merge!(index_data)
 
         json
+      end
+
+      def is_featured?(sku)
+        sku.to_s.downcase.start_with?("mw-", "pl-") ? 1 : -1
       end
 
       def presenter_price_in_currency(variant, currency = 'USD')
@@ -309,8 +314,8 @@ module SpreeSearchkick
           in_stock: presenter[:in_stock],
           conversions: orders.complete.count,
           main_brand: main_brand,
-          featured: featured,
-          keywords: meta_keywords.to_s.split(",").map(&:strip)
+          featured: is_featured?(sku),
+          tags: meta_keywords.to_s.split(",").map(&:strip),
         }
 
         properties.each do |prop|

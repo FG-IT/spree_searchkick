@@ -24,6 +24,7 @@ module Spree
             :images
           ],
         ]
+
         includes = args.delete(:includes)
         if includes.nil?
           if defined?(::Spree::ProductRepresentation)
