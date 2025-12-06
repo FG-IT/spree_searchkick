@@ -315,7 +315,7 @@ module SpreeSearchkick
           conversions: orders.complete.count,
           main_brand: main_brand,
           featured: is_featured?(sku),
-          tags: meta_keywords.to_s.split(",").map(&:strip),
+          tags: meta_keywords.to_s.downcase.split(",").map(&:strip),
         }
 
         properties.each do |prop|
