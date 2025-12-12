@@ -213,8 +213,8 @@ module SpreeSearchkick
         json
       end
 
-      def is_featured?(sku)
-        sku.to_s.downcase.start_with?("mw-", "pl-") ? 1 : -1
+      def is_featured?(skus)
+        skus.any? { |e| e.downcase.start_with?("mw-", "pl-") } ? 1 : -1
       end
 
       def presenter_price_in_currency(variant, currency = 'USD')
@@ -314,7 +314,7 @@ module SpreeSearchkick
           in_stock: presenter[:in_stock],
           conversions: orders.complete.count,
           main_brand: main_brand,
-          featured: is_featured?(sku),
+          featured: is_featured?(skus),
           tags: meta_keywords.to_s.downcase.split(",").map(&:strip),
         }
 
