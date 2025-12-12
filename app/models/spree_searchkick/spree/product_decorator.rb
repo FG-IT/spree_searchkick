@@ -19,7 +19,8 @@ module SpreeSearchkick
             :isins,
             :barcode,
             :conversions,
-            :tags
+            :tags,
+            :search_keywords
           ],
           mappings: {
             properties: {
@@ -316,6 +317,7 @@ module SpreeSearchkick
           main_brand: main_brand,
           featured: is_featured?(skus),
           tags: meta_keywords.to_s.downcase.split(",").map(&:strip),
+          search_keywords: extra_keywords(presenter[:name]).map(&:strip)
         }
 
         properties.each do |prop|
@@ -382,6 +384,52 @@ module SpreeSearchkick
       def after_remove_for_taxon_hook(taxon)
         updated_at = Time.now
         mark_for_reindex
+      end
+
+      def extra_keywords(title)
+        words = title.to_s.downcase.scan(/[a-z0-9]+/)
+        counts = words.tally
+        extract_clean_keywords(counts.select { |tag, count| count > 0 && tag.length > 2 }.keys)
+      end
+
+      def extract_clean_keywords(words)
+        # words = title.downcase.scan(/[a-z0-9]+/)
+        stopwords = %w[
+  # --- English stopwords ---
+  the a an and or but if then else when where how what which who whose
+  this that these those is are was were be been being
+  in on at by with for from to of as into over under
+  it its they them their my your our we you he she
+
+  # --- Colors (basic + extended e-commerce set) ---
+  red blue green yellow white black brown grey gray pink purple orange
+  silver gold beige tan ivory lime mint navy teal violet bronze rose
+  multicolor multi-color assorted assortedcolor rainbow
+
+  # --- Sizes, units, quantities ---
+  size weight volume length width height
+  oz ml l g kg lb lbs mg mcg gram grams ml liter litre
+  pack packs packof bundle bunch lot count piece pieces
+  1oz 2oz 4oz 8oz 16oz 30ml 50ml 100ml 250ml 500ml
+
+  # --- Generic marketing fluff ---
+  natural organic pure premium original new authentic genuine
+  quality high highquality best top grade extra strong strong formula complex
+
+  # --- Product forms ---
+  spray toner cleanser wash liquid oil
+  powder extract capsule softgel tablet pill drops solution paste
+  wipe wipes patch patches bar sheet sheets foam mousse
+
+  # --- Packaging words ---
+  bottle jar tube bag pouch box container brand
+]
+
+        words
+          .reject { |w| stopwords.include?(w) }
+          .reject { |w| w =~ /^\d+$/ || w.match?(/^\d+([a-z]+)?$/i) || # 1oz, 30ml, 500mg, 60caps
+            w.match?(/^\d+$/) } # remove pure numbers
+          .uniq
       end
 
     end
