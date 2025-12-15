@@ -214,8 +214,8 @@ module SpreeSearchkick
         json
       end
 
-      def is_featured?(skus)
-        skus.any? { |e| e.downcase.start_with?("mw-", "pl-") } ? 1 : -1
+      def is_featured?(variants)
+        variants.any? { |variant| variant[:sku].downcase.start_with?("mw-", "pl-") } ? 1 : -1
       end
 
       def presenter_price_in_currency(variant, currency = 'USD')
@@ -315,7 +315,7 @@ module SpreeSearchkick
           in_stock: presenter[:in_stock],
           conversions: orders.complete.count,
           main_brand: main_brand,
-          featured: is_featured?(skus),
+          featured: is_featured?(sellable_variants),
           tags: meta_keywords.to_s.downcase.split(",").map(&:strip),
           search_keywords: extra_keywords(presenter[:name]).map(&:strip)
         }
@@ -419,10 +419,31 @@ module SpreeSearchkick
   # --- Product forms ---
   spray toner cleanser wash liquid oil
   powder extract capsule softgel tablet pill drops solution paste
-  wipe wipes patch patches bar sheet sheets foam mousse
+  wipe wipes patch patches bar sheet sheets foam mousse sugar added
 
   # --- Packaging words ---
   bottle jar tube bag pouch box container brand
+  the and with for from made vegan capsule capsules supplement supplements
+  complex in a an of to by uk bio culture cultures strain strains
+  billion cfu tablets tablet size weight pack mg g ml this that is are
+  color colors form forms bottle bottles softgel softgels sugar-free
+  the a an and or but if then else when where how what which who whose
+  this that these those is are was were be been being
+  in on at by with for from to of as into over under
+  it its they them their my your our we you he she
+  red blue green yellow white black brown grey gray pink purple orange
+  silver gold beige tan ivory lime mint navy teal violet bronze rose
+  multicolor multi-color assorted assortedcolor rainbow
+  size weight volume length width height
+  oz ml l g kg lb lbs mg mcg gram grams ml liter litre
+  pack packs packof bundle bunch lot count piece pieces
+  1oz 2oz 4oz 8oz 16oz 30ml 50ml 100ml 250ml 500ml
+  natural organic pure premium original new authentic genuine
+  quality high highquality best top grade extra strong strong formula complex
+  spray toner cleanser wash liquid oil
+  powder extract capsule softgel tablet pill drops solution paste
+  wipe wipes patch patches bar sheet sheets foam mousse
+  bottle jar tube bag pouch box container brand cultures category supreme
 ]
 
         words
