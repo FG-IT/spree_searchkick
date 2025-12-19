@@ -20,7 +20,8 @@ module SpreeSearchkick
             :barcode,
             :conversions,
             :tags,
-            :search_keywords
+            :search_keywords,
+            :country_of_origin
           ],
           mappings: {
             properties: {
@@ -203,7 +204,8 @@ module SpreeSearchkick
             active: available?,
             in_stock: in_stock?,
             conversions: orders.complete.count,
-            featured: is_featured?(sku)
+            featured: is_featured?(sku),
+            country_of_origin: country_of_origin
           }
           json.merge!(option_types_for_es_index(all_variants))
           json.merge!(properties_for_es_index)
@@ -216,6 +218,11 @@ module SpreeSearchkick
 
       def is_featured?(variants)
         variants.any? { |variant| variant[:sku].downcase.start_with?("mw-", "pl-") } ? 1 : -1
+      end
+
+      def country_of_origin
+        country_names = ["region", "country of origin", "country", "country_of_origin", "country/region of origin"]
+        presenter[:properties]&.find { |p| country_names.include?(p["name"].to_s.downcase) }&.dig("value")
       end
 
       def presenter_price_in_currency(variant, currency = 'USD')
@@ -317,7 +324,8 @@ module SpreeSearchkick
           main_brand: main_brand,
           featured: is_featured?(sellable_variants),
           tags: meta_keywords.to_s.downcase.split(",").map(&:strip),
-          search_keywords: extra_keywords(presenter[:name]).map(&:strip)
+          search_keywords: extra_keywords(presenter[:name]).map(&:strip),
+          country_of_origin: country_of_origin
         }
 
         properties.each do |prop|
