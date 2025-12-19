@@ -250,7 +250,7 @@ module SpreeSearchkick
         presenter[:variants]&.each { |variant| skus << variant[:sku] if !variant[:sku].blank? }
         skus.uniq!
 
-        properties = presenter[:properties]&.select { |prop| !prop[:value].blank? }
+        properties = presenter[:properties]&.select { |prop| prop[:filterable] > 0 && !prop[:value].blank? }
         if properties.nil?
           properties = []
         end
