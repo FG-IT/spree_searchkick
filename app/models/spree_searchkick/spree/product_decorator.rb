@@ -234,7 +234,15 @@ module SpreeSearchkick
         end
         price
       end
+      def normalize_es_datetime(value)
+        return value unless value.is_a?(String)
 
+        if value.match?(/\A\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{6}\z/)
+          value.sub(/\.\d{6}\z/, '').sub(' ', 'T') + 'Z'
+        else
+          value
+        end
+      end
       def search_data_representable
         taxons = {}
         presenter[:taxons]&.each do |t_path|
@@ -285,8 +293,12 @@ module SpreeSearchkick
           end
         end
 
+        created_at = presenter[:created_at]
         sellable_variants.each do |v|
           variant_price = presenter_price_in_currency(v)
+          if v[:created_at] > created_at
+            created_at = v[:created_at]
+          end
           if variant_price[:amount] < price || price == 0
             price = variant_price[:amount]
             compare_at_price = variant_price[:compare_at_amount]
@@ -299,7 +311,7 @@ module SpreeSearchkick
           name: presenter[:name],
           description: description.nil? ? '' : ActionView::Base.full_sanitizer.sanitize(description).gsub(/\r?\n/, " ").squeeze(" ").strip,
           slug: presenter[:slug],
-          created_at: presenter[:created_at],
+          created_at: normalize_es_datetime(created_at),
           updated_at: presenter[:updated_at],
           taxon_ids: taxons.values.map { |t| t[:id] },
           taxon_names: taxons.values.map { |t| t[:name] },
