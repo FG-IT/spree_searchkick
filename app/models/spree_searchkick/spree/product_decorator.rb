@@ -14,6 +14,7 @@ module SpreeSearchkick
             :countries, # keyword (array/string)
             :main_brand,
             :brand, # keyword
+            :country,
             :taxon_ids, # integer or keyword; either is fine for aggs
             :ship_from_countries, # keyword (array/string)
             :isins,
