@@ -61,7 +61,7 @@ module SpreeSearchkick
         end
 
         def base.filter_fields
-          [:brand, :tags, :taxon_ids, :vendor_ids, :isins, :property_ids, :option_type_ids, :option_value_ids, :shipping_category_ids, :countries, :price, :ship_from_countries,:country_of_origin]
+          [:brand, :tags, :taxon_ids, :vendor_ids, :isins, :property_ids, :option_type_ids, :option_value_ids, :shipping_category_ids, :countries, :price, :ship_from_countries, :country_of_origin]
             .union ::Spree::Property.filterable.map { |p| p.filter_name }
         end
 
@@ -218,7 +218,12 @@ module SpreeSearchkick
       end
 
       def is_featured?(variants)
-        variants.any? { |variant| variant[:sku].downcase.start_with?("mw-", "pl-") } ? 1 : -1
+        return 1 if variants.any? { |v| v["sku"]&.downcase&.start_with?("mw-") && v["stock_items"].any? { |si| si["count_on_hand"].to_i > 2 } }
+        return 2 if variants.any? { |v| v["sku"]&.downcase&.start_with?("pl-") }
+        return 3 if variants.any? { |v| v["sku"]&.downcase&.start_with?("ib-") }
+
+        -1
+
       end
 
       def country_of_origin
@@ -235,6 +240,7 @@ module SpreeSearchkick
         end
         price
       end
+
       def normalize_es_datetime(value)
         return value unless value.is_a?(String)
 
@@ -244,6 +250,7 @@ module SpreeSearchkick
           value
         end
       end
+
       def search_data_representable
         taxons = {}
         presenter[:taxons]&.each do |t_path|
@@ -343,6 +350,10 @@ module SpreeSearchkick
 
         properties.each do |prop|
           json.merge!(Hash[prop[:name].downcase, prop[:value]])
+        end
+
+        unless json[:brand].present?
+          json[:brand] = main_brand
         end
 
         json
