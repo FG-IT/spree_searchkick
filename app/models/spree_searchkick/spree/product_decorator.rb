@@ -352,8 +352,8 @@ module SpreeSearchkick
           json.merge!(Hash[prop[:name].downcase, prop[:value]])
         end
 
-        unless json[:brand].present?
-          json[:brand] = main_brand
+        unless json["brand"].present?
+          json["brand"] = main_brand
         end
 
         json
