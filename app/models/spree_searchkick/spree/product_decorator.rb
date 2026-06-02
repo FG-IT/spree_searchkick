@@ -218,8 +218,9 @@ module SpreeSearchkick
       end
 
       def is_featured?(variants)
-        return 1 if variants.any? { |v| v["sku"]&.downcase&.start_with?("mw-") && v["stock_items"].any? { |si| si["count_on_hand"].to_i > 2 } }
+        return 1 if variants.any? { |v| v["sku"]&.downcase&.start_with?("mw-") }
         return 2 if variants.any? { |v| v["sku"]&.downcase&.start_with?("pl-") }
+        return 2 if variants.any? { |v| v["sku"]&.downcase&.start_with?("cndf-") }
         return 3 if variants.any? { |v| v["sku"]&.downcase&.start_with?("ib-") }
 
         -1

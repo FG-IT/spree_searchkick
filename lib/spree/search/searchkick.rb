@@ -60,7 +60,8 @@ module Spree
       def where_query(**args)
         where_query = {
           active: true,
-          price: { gt: 0 }
+          has_image: true,
+          # price: { gt: 0 }
         }
 
         if defined?(args)
