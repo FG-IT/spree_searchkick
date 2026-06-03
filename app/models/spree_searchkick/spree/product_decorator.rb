@@ -218,10 +218,21 @@ module SpreeSearchkick
       end
 
       def is_featured?(variants)
-        return 1 if variants.any? { |v| v["sku"]&.downcase&.start_with?("mw-") }
-        return 2 if variants.any? { |v| v["sku"]&.downcase&.start_with?("pl-") }
-        return 2 if variants.any? { |v| v["sku"]&.downcase&.start_with?("cndf-") }
-        return 3 if variants.any? { |v| v["sku"]&.downcase&.start_with?("ib-") }
+        prefix_mapping = {
+          "mw" => 1,
+          "pl" => 2,
+          "cndf" => 2,
+          "ib" => 3
+        }.freeze
+
+        variants.each do |variant|
+          sku = variant["sku"]&.downcase
+          next unless sku
+
+          prefix_mapping.each do |prefix, value|
+            return value if sku.start_with?("#{prefix}-", "#{prefix}_")
+          end
+        end
 
         -1
 
