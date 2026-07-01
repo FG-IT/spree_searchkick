@@ -351,7 +351,7 @@ module SpreeSearchkick
           skus: skus,
           barcode: barcode,
           active: available? && presenter[:available] && presenter[:in_stock],
-          in_stock: presenter[:in_stock],
+          in_stock: presenter[:in_stock] && price > 1,
           conversions: orders.complete.count,
           main_brand: main_brand,
           featured: is_featured?(sellable_variants),
